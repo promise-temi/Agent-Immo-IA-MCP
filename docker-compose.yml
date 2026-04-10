@@ -1,6 +1,14 @@
 version: "3.9"
 
 services:
+
+  mcp:
+    build: ./MCP
+    container_name: mcp
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+
   backend:
     build: ./Backend
     container_name: agent-backend
@@ -12,6 +20,8 @@ services:
     volumes:
     - ./Backend/Src/static:/app/static
     - ./Backend/Src/templates:/app/templates
+    depends_on:
+      - mcp
     
 
   nginx:
@@ -26,4 +36,5 @@ services:
       - ./nginx/localhost-key.pem:/etc/nginx/certs/localhost-key.pem:ro
     depends_on:
       - backend
+      - mcp
     restart: unless-stopped

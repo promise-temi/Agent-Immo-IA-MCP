@@ -5,9 +5,9 @@ from pathlib import Path
 import sys
 root_path = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_path))
-from langchain.tools import tool
 
-@tool
+
+
 def moyenne_prix_bien_selon_surface_habitable(surface_habitable_souhaite:object, type_souhaite:list, communes_souhaite:list[str]) -> list[dict]:  
     """
     Estime les prix immobiliers (min, max, moyen) en fonction de la surface habitable,

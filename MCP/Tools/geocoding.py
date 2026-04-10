@@ -1,9 +1,5 @@
 import pgeocode
-from langchain.tools import tool
 
-
-
-@tool
 def geocode_localisations(localisations: list[str]) -> list[str]:
     """
     Convertit une liste de localisations textuelles en une liste exhaustive de codes postaux.

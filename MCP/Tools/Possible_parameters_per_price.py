@@ -4,9 +4,9 @@ from pathlib import Path
 import sys
 root_path = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_path))
-from langchain.tools import tool
 
-@tool
+
+
 def surface_habitable_selon_prix(valeurs_foncieres:dict, type_souhaite:list, communes_souhaite:list[str]) -> list[dict]:  
     
     """

@@ -11,7 +11,7 @@ class Interactions{
         this.add_question("user", user_prompt)
         document.querySelector("textarea").value = ""
 
-        fetch('http://127.0.0.1:8000/agent', {
+        fetch('https://127.0.0.1/agent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

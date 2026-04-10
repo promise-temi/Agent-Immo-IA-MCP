@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-from langchain.tools import tool
+
 # Facultatif si tu veux garder webdriver-manager
 from webdriver_manager.firefox import GeckoDriverManager
 
@@ -124,7 +124,6 @@ urls = {
 }
 
 
-@tool
 def PreConseils_Immobiliers() -> object:
     """
     Fournit au modèle l'ensemble des ressources documentaires immobilières FNAIM.
@@ -173,7 +172,7 @@ def _create_driver():
     # return webdriver.Firefox(options=options)
 
 
-@tool
+
 def Conseils_Immobiliers(code_url):
     """
     Récupère le contenu textuel complet d'un article immobilier 

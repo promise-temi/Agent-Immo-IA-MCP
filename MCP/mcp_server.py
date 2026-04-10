@@ -1,39 +1,13 @@
-# noqa
-import os
-import sys
-import asyncio
-from pathlib import Path
+from fastmcp import FastMCP
+from Tools.Advices import PreConseils_Immobiliers, Conseils_Immobiliers
+from Tools.geocoding import geocode_localisations
+from Tools.Possible_parameters_per_price import surface_habitable_selon_prix
+from Tools.Tool_Price_per_parameters import moyenne_prix_bien_selon_surface_habitable
 
-from dotenv import load_dotenv
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langgraph.checkpoint.memory import InMemorySaver
-from fastmcp import Client
+server = FastMCP("Agent-Immo-IA-MCP")
 
-root_path = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(root_path))
-
-from Llm.llm_service import llm_model, PROMPT_SYSTEM
-
-load_dotenv()
-
-LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
-if not LANGSMITH_API_KEY:
-    raise ValueError("La variable d'environnement LANGSMITH_API_KEY est introuvable.")
-
-os.environ["LANGSMITH_TRACING"] = "true"
-
-client = Client("http://mcp:8001/mcp")
-
-
-async def _call_mcp_tool(tool_name: str, args: dict):
-    async with client:
-        result = await client.call_tool(tool_name, args)
-        return result.data
-
-
-@tool
-def preconseils_immobiliers() -> str:
+@server.tool()
+def PreConseils_Immobiliers_() -> object:
     """
     Fournit au modèle l'ensemble des ressources documentaires immobilières FNAIM.
 
@@ -60,11 +34,10 @@ def preconseils_immobiliers() -> str:
     RETURNS :
         dict : { cle_article : { "description": str, "url": str } }
     """
-    return asyncio.run(_call_mcp_tool("PreConseils_Immobiliers_", {}))
+    return PreConseils_Immobiliers()
 
-
-@tool
-def conseils_immobiliers(question: str) -> str:
+@server.tool()
+def Conseils_Immobiliers_(code_url:str) -> str: 
     """
     Récupère le contenu textuel complet d'un article immobilier 
     à partir de sa clé (code_url).
@@ -95,11 +68,11 @@ def conseils_immobiliers(question: str) -> str:
     RETURNS :
         str : texte complet de l'article, prêt à être analysé par le modèle IA
     """
-    return asyncio.run(_call_mcp_tool("Conseils_Immobiliers_", {"question": question}))
+    return Conseils_Immobiliers(code_url)
 
 
-@tool
-def geocode_localisations(localisation: str) -> str:
+@server.tool()
+def geocode_localisations_(localisations: list[str]) -> list[str]:
     """
     Convertit une liste de localisations textuelles en une liste exhaustive de codes postaux.
 
@@ -129,11 +102,12 @@ def geocode_localisations(localisation: str) -> str:
     RETURNS:
         list[str] : liste triée de codes postaux uniques.
     """
-    return asyncio.run(_call_mcp_tool("geocode_localisations_", {"localisation": localisation}))
+    return geocode_localisations(localisations)
 
 
-@tool
-def surface_habitable_selon_prix(prix: float, ville: str) -> str:
+@server.tool()
+def surface_habitable_selon_prix_(valeurs_foncieres:dict, type_souhaite:list, communes_souhaite:list[str]) -> list[dict]:  
+    
     """
     Estime les surfaces habitables (min, max, moyenne) accessibles en fonction d'un budget donné.
 
@@ -191,16 +165,11 @@ def surface_habitable_selon_prix(prix: float, ville: str) -> str:
     Si les paramètres fournis sont trop restrictifs et ne correspondent à aucune donnée,
     la fonction renvoie un message explicatif.
     """
-    return asyncio.run(
-        _call_mcp_tool(
-            "surface_habitable_selon_prix_",
-            {"prix": prix, "ville": ville}
-        )
-    )
+    return surface_habitable_selon_prix(valeurs_foncieres, type_souhaite, communes_souhaite)
 
 
-@tool
-def moyenne_prix_bien_selon_surface_habitable(surface: float, ville: str) -> str:
+@server.tool()
+def moyenne_prix_bien_selon_surface_habitable_(surface_habitable_souhaite:object, type_souhaite:list, communes_souhaite:list[str]) -> list[dict]:  
     """
     Estime les prix immobiliers (min, max, moyen) en fonction de la surface habitable,
     du type de bien et des communes ciblées.
@@ -254,34 +223,9 @@ def moyenne_prix_bien_selon_surface_habitable(surface: float, ville: str) -> str
     Permettre au modèle IA de fournir une estimation immobilière réaliste et contextualisée
     en fonction des critères fournis par l'utilisateur.
     """
-    return asyncio.run(
-        _call_mcp_tool(
-            "moyenne_prix_bien_selon_surface_habitable_",
-            {"surface": surface, "ville": ville}
-        )
-    )
+    return moyenne_prix_bien_selon_surface_habitable(surface_habitable_souhaite, type_souhaite, communes_souhaite)
 
 
-tools = [
-    preconseils_immobiliers,
-    conseils_immobiliers,
-    geocode_localisations,
-    surface_habitable_selon_prix,
-    moyenne_prix_bien_selon_surface_habitable,
-]
 
-memory = InMemorySaver()
-
-agent = create_agent(
-    model=llm_model,
-    tools=tools,
-    system_prompt=PROMPT_SYSTEM,
-    checkpointer=memory,
-)
-
-
-def agent_run(user_prompt: str, thread_id: str = "default"):
-    return agent.invoke(
-        {"messages": [{"role": "user", "content": user_prompt}]},
-        config={"configurable": {"thread_id": thread_id}},
-    )
+if __name__ == "__main__":
+    server.run(transport='http', host="0.0.0.0", port=8001)
