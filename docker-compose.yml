@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./Backend
+    container_name: agent-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "9000"
+    volumes:
+    - ./Backend/Src/static:/app/static
+    - ./Backend/Src/templates:/app/templates
+    
+
+  nginx:
+    image: nginx:latest
+    container_name: agent-nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/localhost.pem:/etc/nginx/certs/localhost.pem:ro
+      - ./nginx/localhost-key.pem:/etc/nginx/certs/localhost-key.pem:ro
+    depends_on:
+      - backend
+    restart: unless-stopped

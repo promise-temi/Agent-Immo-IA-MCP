@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="body">
+        
+        {% block content %}
+        <section class="half discu">
+            <div class="pres">
+                <h1>REIA : Votre assitant immobilier personnel</h1>
+            </div>
+            <section class="interact">
+            
+                
+            </section>
+            <section class="form">
+                <div class="form">
+                    <div class="upper">
+                        <input type="checkbox" name="TTC"> <span style="color: white;">Frais compris</span>
+                    </div>
+                    <div class="lower">
+                        <textarea name="user-question" id="user-question"></textarea>
+                        <button class="envoyer" onclick="interact_.question_pipeline()">Envoyer</button>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </div>
+    {% endblock content %}
+    
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
